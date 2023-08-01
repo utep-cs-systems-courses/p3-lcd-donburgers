@@ -1,62 +1,90 @@
-#include <msp430.h> 
-#include "notes.h"
+#include <msp430.h>
 
-#define BUZZER BIT1 // Buzzer -> P2.1
-#define BUTTON BIT3 // Button -> P1.3
-#define F_CPU 1200000L // CPU Freq approx 1.2 MHz
+// Define the frequencies for musical notes
+#define NOTE_C4  261.63
+#define NOTE_D4  293.66
+#define NOTE_E4  329.63
+#define NOTE_F4  349.23
+#define NOTE_G4  392.00
+#define NOTE_A4  440.00
+#define NOTE_B4  493.88
 
-volatile unsigned long count;
+// Define the frequency for the system clock (SMCLK)
+#define SMCLK_FREQ 1000000  // Assuming SMCLK is set to 1MHz
 
-// Function to generate a note for a specified duration
-void playNote(unsigned int note, unsigned int duration)
+// Define the melody sequence
+float melody[] = {
+    NOTE_C4, NOTE_C4, NOTE_G4, NOTE_G4, NOTE_A4, NOTE_A4, NOTE_G4
+};
+
+// Define the duration for each note in the melody
+int noteDurations[] = {
+    4, 4, 4, 4, 4, 4, 2  // 4 represents a quarter note, 2 represents a half note, etc.
+};
+
+// Set up Timer A to run in up mode
+void timerAUpmode()
 {
-	volatile unsigned int period, cycles;
-
-	period = F_CPU / note;							// Timer Period = F_CPU / Fnote
-	cycles = (F_CPU * duration)/(1000L * period);	// Note duration as number of Timer cycles
-
-	count = cycles;									// Set global count variable
-	TA1CCR0 = period;								// Set timer period
-	TA1CCR1 = period/2;								// Generate output on TA1.1 at 50% duty cycle
-	TA1CTL = TACLR + TASSEL_2 +  MC_1;				// Timer -> SMCLK, Up Mode, Clear
-	TA1CCTL0 |= CCIE;								// Enable CCR0 interrupt
-	TA1CCTL1 |= OUTMOD_7;							// Output mode for TA1.1
-
-	if(note > 0 && duration > 0)					// Only if note/duration is non zero
-		P2SEL |= BUZZER;							// Send Timer Output to pin
-
-	__bis_SR_register(LPM0_bits + GIE);				// Goto LPM and wait for note to complete
-	TA1CTL = MC_0;									// Stop Timer
-	P2SEL &= ~BUZZER;								// Turn off timer output to pin
+    TA0CCR0 = 0;  // Initialize counter to 0
+    TA0CCR1 = 0;  // Initialize duty cycle to 0% (off)
+    TA0CTL |= TASSEL_2 + MC_1;  // Source: SMCLK, Mode: Up to CCR0
+    TA0CCTL1 |= OUTMOD_7;  // Output mode: Reset on CCR1, set on CCR0
 }
 
+// Initialize buzzer on P2.6
+void buzzer_init()
+{
+    timerAUpmode();  // Set up timer for PWM
+    P2SEL2 &= ~(BIT6 | BIT7);
+    P2SEL &= ~BIT7; 
+    P2SEL |= BIT6;
+    P2DIR = BIT6;  // Set P2.6 as output
+}
 
-void main(void) {
-    WDTCTL = WDTPW | WDTHOLD; // Stop watchdog timer
-    P2DIR |= BUZZER; // Set Buzzer pin as Output
+// Play a note on the buzzer
+void playBuzzer(float frequency)
+{
+    int timerPeriod = SMCLK_FREQ / frequency;  // Calculate timer period for desired frequency
+    TA0CCR0 = timerPeriod;
+    TA0CCR1 = timerPeriod / 2;  // 50% duty cycle
+    TA0CTL |= TASSEL_2 + MC_1;  // Source: SMCLK, Mode: Up to CCR0
+    P1OUT |= (BIT0 | BIT1);  // Turn on LEDs on P1.0 and P1.1
+}
 
-    // Button setup
-    P1DIR &= ~BUTTON; // Set BUTTON as Input
-    P1REN |= BUTTON;  // Enable Resistor for BUTTON pin
-    P1OUT |= BUTTON;  // Pull-up resistor for BUTTON pin
+// Stop the buzzer
+void stopBuzzer()
+{
+    TA0CTL = MC_0;  // Stop the timer
+    P2OUT &= ~BIT6;  // Turn off the buzzer
+    P1OUT &= ~(BIT0 | BIT1);  // Turn off LEDs on P1.0 and P1.1
+}
 
-    while(1)
+// Delay for a specified number of milliseconds
+void delay_ms(int ms)
+{
+    while (ms--) 
     {
-        // Button pressed
-        if (!(P1IN & BUTTON)) 
-        {
-            // Here, just play the first note when the button is pushed
-            playNote(melody[0], (1000/noteDurations[0]));
-
-            // Simple debounce
-            __delay_cycles(200000); // Simple delay for debounce
-        }
+        __delay_cycles(SMCLK_FREQ / 1000);  // 1 ms delay
     }
 }
 
-#pragma vector = TIMER1_A0_VECTOR					// Timer 1 CCR0 Interrupt Vector
-__interrupt void CCR0_ISR(void)
+// Main function
+int main(void)
 {
-	count--;										// Decrement duration counter
-	if(count == 0)
-		__bic_SR_register_on_exit(LPM0_bits);		// Exit LPM when note is complete
+    WDTCTL = WDTPW + WDTHOLD;  // Stop watchdog timer
+
+    buzzer_init();  // Initialize the buzzer
+
+    P1DIR |= (BIT0 | BIT1);  // Set P1.0 and P1.1 as outputs
+    P1OUT &= ~(BIT0 | BIT1);  // Ensure LEDs are off to start
+
+    // Play the melody
+    for (int i = 0; i < sizeof(melody) / sizeof(melody[0]); i++) {
+        playBuzzer(melody[i]);
+        delay_ms(1000 / noteDurations[i]);
+        stopBuzzer();
+        delay_ms(250 / noteDurations[i]);  // Short delay between notes
+    }
+
+    return 0;
+}
