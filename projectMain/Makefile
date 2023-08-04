@@ -1,7 +1,7 @@
 CC = msp430-elf-gcc
 CFLAGS = -mmcu=msp430g2553
 OBJS = main.o
-TARGET = maryRoySiSeLaDoy.elf
+TARGET = main.elf
 
 all: $(TARGET)
 
