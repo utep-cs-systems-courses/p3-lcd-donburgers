@@ -4,6 +4,8 @@
 #include "buzzer.h"
 #include "delay.h"
 #include "timer.h"
+#include "grlib.h"
+#include "darksouls_bonfire.h" 
 
 // Define the frequency for the system clock (SMCLK)
 #define SMCLK_FREQ 1000000  // Assuming SMCLK is set to 1MHz
@@ -44,7 +46,9 @@ int main(void)
     while ((P2IN & BIT0) == BIT0) {  // while button is not pressed
         // do nothing
     }
-
+    Graphics_initialize();
+    // Draw the image at the desired coordinates (e.g., x=0, y=0)
+    Graphics_drawImage(&darksouls_bonfire4BPP_COMP_RLE4, 0, 0);
     // Once button is pressed, play the melody
     for (int i = 0; melody[i] != -1; i++)
       {
