@@ -14,15 +14,14 @@ int main(void)
     button_init();  // Initialize the button
     
     P1DIR |= (BIT0 | BIT2);  // Set P1.0 and P1.2 as outputs
-    P1OUT &= ~(BIT0 | BIT2);  // Ensure LEDs are off to start
-
-    // Wait for the button to be pressed
+    P1OUT &= ~(BIT0 | BIT2);  // Ensure LEDs are off to start    // Wait for the button to be pressed
     while ((P2IN & BIT0) == BIT0) {  // while button is not pressed
         // do nothing
     }
 
     // Once button is pressed, play the melody
-    for (int i = 0; i < sizeof(melody) / sizeof(melody[0]); i++) {
+    for (int i = 0; melody[i] != -1; i++)
+      {
         playBuzzer(melody[i], noteDurations[i]);
         delay_ms(1000 / noteDurations[i]);
         stopBuzzer();
