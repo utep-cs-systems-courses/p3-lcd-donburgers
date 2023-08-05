@@ -5,6 +5,32 @@
 #include "delay.h"
 #include "timer.h"
 
+// Define the frequency for the system clock (SMCLK)
+#define SMCLK_FREQ 1000000  // Assuming SMCLK is set to 1MHz
+
+float melody[] = {
+    NOTE_E6, NOTE_D6, NOTE_A5,  
+    NOTE_E6, NOTE_D6, NOTE_G6, NOTE_F6, NOTE_E6, //Measure 2
+    NOTE_A6, NOTE_E6, // Measure 3
+    NOTE_E6, NOTE_F6, NOTE_G6, NOTE_E6, 
+    NOTE_E6, NOTE_D6, NOTE_C6, NOTE_B5, 
+    NOTE_B5, NOTE_C6, NOTE_D6, NOTE_B5,
+};
+
+// Define the duration for each note in the melody
+int noteDurations[] = {
+  //1 = whole note
+  //2 = Half notes
+    2, 2, 1, // 1st Measure 
+    2, 2, 1, 2, 1, // 2nd Measure 
+    2, 1, 
+    2, 2, 2, 1, 
+    2, 2, 2, 1, 
+    2, 2, 2, 1, 
+    
+    
+};
+
 // Main function
 int main(void)
 {
