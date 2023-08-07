@@ -1,4 +1,4 @@
-MSP430 Buzzer Melody Player - Dark Souls Lord Gwyn Theme
+																																																							MSP430 Buzzer Melody Player - Dark Souls Lord Gwyn Theme
 
 Overview
 Embrace the challenge of the Dark Souls universe right on your MSP430! This project plays the haunting theme of Lord Gwyn, the final boss in Dark Souls, through a buzzer. Whether you're a seasoned Chosen Undead or just beginning your journey in Lordran, this melody is sure to evoke memories of epic battles and hard-fought victories.
