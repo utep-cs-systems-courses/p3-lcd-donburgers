@@ -74,6 +74,7 @@ int main(void)
     // Wait for the button to be pressed
     while (1) {
         if ((P2IN & BIT0) == 0) {  // If button (P2.0) is pressed
+            drawGif();
             for (int i = 0; melody[i] != -1; i++) {
                 playBuzzer(melody[i], noteDurations[i]);
                 delay_ms(1000 / noteDurations[i]);
